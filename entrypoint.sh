@@ -28,7 +28,7 @@ EOF
   chmod 640 /etc/odoo/odoo.conf
 
   # Arrancar como usuario odoo (y pasar args sin liarla con comillas)
-  exec su -s /bin/bash odoo -c "odoo \
+  exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
     --http-port='${HTTP_PORT}' \
     --db_host='${PGHOST}' \
     --db_port='${PGPORT}' \

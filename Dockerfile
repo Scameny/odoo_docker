@@ -6,6 +6,5 @@ RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-USER odoo
 CMD ["odoo"]
 
