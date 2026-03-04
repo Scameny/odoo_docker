@@ -22,12 +22,18 @@ if [ "$(id -u)" -eq 0 ]; then
 admin_passwd = ${ODOO_MASTER_PASSWORD}
 list_db = True
 data_dir = /var/lib/odoo
+workers = 0
+max_cron_threads = 1
+longpolling_port = False
+limit_memory_soft = 268435456
+limit_memory_hard = 536870912
+limit_time_cpu = 60
+limit_time_real = 120
 EOF
 
   chown odoo:odoo /etc/odoo/odoo.conf
   chmod 640 /etc/odoo/odoo.conf
 
-  # Arrancar como usuario odoo (y pasar args sin liarla con comillas)
   exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
     --http-port='${HTTP_PORT}' \
     --db_host='${PGHOST}' \
