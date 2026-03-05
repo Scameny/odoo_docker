@@ -22,7 +22,6 @@ if [ "$(id -u)" -eq 0 ]; then
 admin_passwd = ${ODOO_MASTER_PASSWORD}
 list_db = True
 data_dir = /var/lib/odoo
-workers = 0
 max_cron_threads = 1
 longpolling_port = False
 limit_memory_soft = 268435456
