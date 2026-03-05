@@ -13,6 +13,5 @@ ENV PYTHONPATH="/opt/odoo-python-libs:$PYTHONPATH"
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-USER odoo
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["odoo"]
