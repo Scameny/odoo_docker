@@ -24,8 +24,8 @@ list_db = True
 data_dir = /var/lib/odoo
 max_cron_threads = 1
 longpolling_port = False
-limit_memory_soft = 268435456
-limit_memory_hard = 536870912
+limit_memory_soft = 536870912
+limit_memory_hard = 1073741824
 limit_time_cpu = 60
 limit_time_real = 120
 EOF
