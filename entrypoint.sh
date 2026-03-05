@@ -28,18 +28,24 @@ limit_memory_soft = 536870912
 limit_memory_hard = 1073741824
 limit_time_cpu = 60
 limit_time_real = 120
+addons_path = /usr/lib/python3/dist-packages/odoo/addons,/var/lib/odoo/extra-addons
 EOF
 
   chown odoo:odoo /etc/odoo/odoo.conf
   chmod 640 /etc/odoo/odoo.conf
 
   # Asegurar directorios dentro del data_dir (especialmente con volumen montado)
-  mkdir -p /var/lib/odoo/sessions /var/lib/odoo/filestore
+  mkdir -p /var/lib/odoo/sessions /var/lib/odoo/filestore /var/lib/odoo/extra-addons
 
   # Railway monta el volumen con owner/perm que suelen ser root -> hay que corregirlo en runtime
   chown -R odoo:odoo /var/lib/odoo
   chmod 700 /var/lib/odoo/sessions
-  
+
+
+  if [ -d /opt/bootstrap-addons ] && [ -z "$(ls -A /var/lib/odoo/extra-addons 2>/dev/null)" ]; then
+    cp -r /opt/bootstrap-addons/* /var/lib/odoo/extra-addons/
+    chown -R odoo:odoo /var/lib/odoo/extra-addons
+  fi
   exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
     --http-port='${HTTP_PORT}' \
     --db_host='${PGHOST}' \
