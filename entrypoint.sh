@@ -33,6 +33,13 @@ EOF
   chown odoo:odoo /etc/odoo/odoo.conf
   chmod 640 /etc/odoo/odoo.conf
 
+  # Asegurar directorios dentro del data_dir (especialmente con volumen montado)
+  mkdir -p /var/lib/odoo/sessions /var/lib/odoo/filestore
+
+  # Railway monta el volumen con owner/perm que suelen ser root -> hay que corregirlo en runtime
+  chown -R odoo:odoo /var/lib/odoo
+  chmod 700 /var/lib/odoo/sessions
+  
   exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
     --http-port='${HTTP_PORT}' \
     --db_host='${PGHOST}' \
