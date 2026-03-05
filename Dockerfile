@@ -2,15 +2,12 @@ FROM odoo:18
 
 USER root
 
-# (Opcional pero recomendable) actualiza pip
-RUN pip3 install --no-cache-dir -U pip
+# Dependencias python en un directorio propio
+RUN mkdir -p /opt/odoo-python-libs && \
+    pip3 install --no-cache-dir --target=/opt/odoo-python-libs \
+      openpyxl ofxparse qifparse
 
-# Dependencias del módulo base_accounting_kit
-RUN pip3 install --no-cache-dir openpyxl ofxparse
-
-# qifparse: el módulo recomienda instalarlo en un target y añadir PYTHONPATH (para Docker)
-RUN pip3 install --no-cache-dir --target=/opt/qiflibs qifparse
-ENV PYTHONPATH="/opt/qiflibs:$PYTHONPATH"
+ENV PYTHONPATH="/opt/odoo-python-libs:$PYTHONPATH"
 
 # Tu entrypoint si lo necesitas
 COPY entrypoint.sh /entrypoint.sh
