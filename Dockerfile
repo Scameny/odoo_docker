@@ -1,17 +1,21 @@
 FROM odoo:18
 
 USER root
-COPY entrypoint.sh /entrypoint.sh
-# Install qifparse to a custom directory
-RUN pip3 install ofxparse
-RUN pip install openpyxl
-RUN pip3 install --target=/opt/qiflibs qifparse
-# Add that directory to PYTHONPATH
+
+# (Opcional pero recomendable) actualiza pip
+RUN pip3 install --no-cache-dir -U pip
+
+# Dependencias del módulo base_accounting_kit
+RUN pip3 install --no-cache-dir openpyxl ofxparse
+
+# qifparse: el módulo recomienda instalarlo en un target y añadir PYTHONPATH (para Docker)
+RUN pip3 install --no-cache-dir --target=/opt/qiflibs qifparse
 ENV PYTHONPATH="/opt/qiflibs:$PYTHONPATH"
+
+# Tu entrypoint si lo necesitas
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-
+USER odoo
 ENTRYPOINT ["/entrypoint.sh"]
-
 CMD ["odoo"]
-
