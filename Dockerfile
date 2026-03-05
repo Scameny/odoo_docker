@@ -9,6 +9,10 @@ RUN mkdir -p /opt/odoo-python-libs && \
 
 ENV PYTHONPATH="/opt/odoo-python-libs:$PYTHONPATH"
 
+
+# Ajusta permisos para el usuario odoo (UID típico 101 en imagen oficial, pero mejor por nombre)
+RUN chown -R odoo:odoo /var/lib/odoo
+
 # Tu entrypoint si lo necesitas
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
