@@ -20,14 +20,17 @@ if [ "$(id -u)" -eq 0 ]; then
   cat > /etc/odoo/odoo.conf <<EOF
 [options]
 admin_passwd = ${ODOO_MASTER_PASSWORD}
-list_db = True
+list_db = False
 data_dir = /var/lib/odoo
 max_cron_threads = 1
 longpolling_port = False
-limit_memory_soft = 536870912
-limit_memory_hard = 1073741824
+proxy_mode = True
+limit_memory_soft = 671088640
+limit_memory_hard = 1342177280
 limit_time_cpu = 60
 limit_time_real = 120
+workers = 2
+db_maxconn = 20
 addons_path = /usr/lib/python3/dist-packages/odoo/addons,/var/lib/odoo/extra-addons
 EOF
 
@@ -46,6 +49,69 @@ EOF
     cp -r /opt/bootstrap-addons/* /var/lib/odoo/extra-addons/
     chown -R odoo:odoo /var/lib/odoo/extra-addons
   fi
+
+  # Modo reparación
+  if [ "${RUN_REPAIR}" = "true" ]; then
+    if [ -z "${DB_NAME}" ]; then
+      echo "ERROR: DB_NAME es obligatorio cuando RUN_REPAIR=true"
+      exit 1
+    fi
+
+    echo "==> Ejecutando reparación sobre la base ${DB_NAME}"
+
+    cat > /tmp/repair_odoo.sql <<'SQL'
+BEGIN;
+
+-- Limpiar assets regenerables
+DELETE FROM ir_attachment
+WHERE name ILIKE '%assets%'
+   OR url ILIKE '/web/content/%assets%';
+
+-- Limpiar cachés web regenerables
+DELETE FROM ir_attachment
+WHERE url LIKE '/web/content/%';
+
+-- Cerrar sesiones web
+DELETE FROM ir_sessions;
+
+-- Desactivar vista problemática hs_code si existe
+UPDATE ir_ui_view
+SET active = FALSE
+WHERE active = TRUE
+  AND (
+        name = 'product.template.form.hs_code'
+        OR arch_db ILIKE '%name="hs_code"%'
+      );
+
+-- Desbloquear sesiones POS en control de apertura
+UPDATE pos_session
+SET state = 'opened'
+WHERE state = 'opening_control';
+
+COMMIT;
+SQL
+
+    echo "==> Ejecutando SQL de saneado"
+    su -s /bin/bash odoo -c "psql \
+      --host='${PGHOST}' \
+      --port='${PGPORT}' \
+      --username='${PGUSER}' \
+      --dbname='${DB_NAME}' \
+      -f /tmp/repair_odoo.sql"
+
+    echo "==> Actualizando módulos: ${REPAIR_MODULES}"
+    exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
+      --http-port='${HTTP_PORT}' \
+      --db_host='${PGHOST}' \
+      --db_port='${PGPORT}' \
+      --db_user='${PGUSER}' \
+      --db_password='${PGPASSWORD}' \
+      -d '${DB_NAME}' \
+      -u '${REPAIR_MODULES}' \
+      --stop-after-init"
+  fi
+
+  
   exec su -s /bin/bash odoo -c "odoo -c /etc/odoo/odoo.conf \
     --http-port='${HTTP_PORT}' \
     --db_host='${PGHOST}' \
